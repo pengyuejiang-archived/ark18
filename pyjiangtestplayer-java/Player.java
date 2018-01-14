@@ -82,7 +82,23 @@ public class Player {
 		Direction randDir = randDir(8);
 
 		// Footprinting
+		VecUnit enemies = gc.senseNearbyUnitsByTeam(uLoc, unit.visionRange(), enemy);
 		VecUnit friendlyAdjUnits = gc.senseNearbyUnitsByTeam(uLoc, 2L, myTeam);
+
+		// Response mechanism
+		// Handling enemies is the priority, if there are some enemies…
+		if (enemies.size() > 0) {
+			// Nearest enemy initialization
+			int eID = enemies.get(0).id();
+			MapLocation eLoc = enemies.get(0).location().mapLocation();
+			long distanceSquaredToEnemy = uLoc.distanceSquaredTo(eLoc);
+			runAwayFrom(unit, eLoc);
+		} else {
+			if (gc.isMoveReady(uID) && gc.canMove(uID, randDir)) {
+				gc.moveRobot(uID, randDir);
+			}
+		}
+
 
 		// Op branch ctrl
 		for (int j = 0; j < friendlyAdjUnits.size(); j++) {
@@ -111,11 +127,6 @@ public class Player {
 		if (gc.canHarvest(uID, randDir)) {
 			gc.harvest(uID, randDir);
 		}
-		// If nothing to harvest, just mv randly
-		else if (gc.isMoveReady(uID) && gc.canMove(uID, randDir)) {
-			gc.moveRobot(uID, randDir);
-		}
-
 	}
 
 	public static void runKnight(Unit unit) {
@@ -149,9 +160,9 @@ public class Player {
 			long distanceSquaredToEnemy = uLoc.distanceSquaredTo(eLoc);
 			// React differently depends on distance to enemy
 			if (distanceSquaredToEnemy < unit.rangerCannotAttackRange()) {
-				// if (gc.isMoveReady(uID) && gc.canMove(uID, bc.bcDirectionOpposite())) {
-                //
-				// }
+				if (gc.isMoveReady(uID)) {
+					runAwayFrom(unit, eLoc);
+				}
 			} else if (distanceSquaredToEnemy < unit.attackRange()) {
 				if (gc.isAttackReady(uID) && gc.canAttack(uID, eID)) {
 					gc.attack(uID, eID);
@@ -244,6 +255,25 @@ public class Player {
 	// I am surprised that there are actually no methods which rets the enemy team.
 	public static Team enemyOf(Team team) {
 		return team == Team.Blue ? Team.Red : Team.Blue;
+	}
+
+	public static void runAwayFrom(Unit unit, MapLocation loc) {
+		MapLocation uLoc = unit.location().mapLocation();
+		long max = uLoc.distanceSquaredTo(loc);
+		Direction optDir = Direction.Center;
+		long temp;
+		for (int i = 0; i < 8; i++) {
+			MapLocation tempLoc = uLoc.add(dirs[i]);
+			temp = tempLoc.distanceSquaredTo(loc);
+			// Refresh min distance:
+			if (temp > max && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), dirs[i])) {
+				max = temp;
+				optDir = dirs[i];
+			}
+		}
+		if (gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), optDir)) {
+			gc.moveRobot(unit.id(), optDir);
+		}
 	}
 
 	// Generate a rand dir based on the num of dirs desired
