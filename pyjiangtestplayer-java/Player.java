@@ -80,6 +80,7 @@ public class Player {
 
 		// Specific initialization
 		Direction randDir = randDir(8);
+		boolean projectsAround = false;
 
 		// Footprinting
 		VecUnit enemies = gc.senseNearbyUnitsByTeam(uLoc, unit.visionRange(), enemy);
@@ -92,30 +93,37 @@ public class Player {
 			int eID = enemies.get(0).id();
 			MapLocation eLoc = enemies.get(0).location().mapLocation();
 			long distanceSquaredToEnemy = uLoc.distanceSquaredTo(eLoc);
+			// Escape from the evil hands of enemies!
 			runAwayFrom(unit, eLoc);
 		} else {
-			if (gc.isMoveReady(uID) && gc.canMove(uID, randDir)) {
+			// First check if there are Ks around
+			if (gc.canHarvest(uID, randDir)) {
+				gc.harvest(uID, randDir);
+			}
+			// Since it doesn't conflict with other actions
+			/* Pseudo-code:
+			if (mines aound) {
+				mine
+			}
+			if (constructions around) {
+				construct
+			} else {
+				mv randly }
+			*/
+			for (int j = 0; j < friendlyAdjUnits.size(); j++) {
+				Unit target = friendlyAdjUnits.get(j);
+				if (target.unitType() == UnitType.Factory || target.unitType() == UnitType.Rocket) {
+					if (gc.canBuild(uID, target.id())) {
+						projectsAround = true;
+						gc.build(uID, target.id());
+					}
+				}
+			}
+			if (gc.isMoveReady(uID) && gc.canMove(uID, randDir) && !projectsAround) {
 				gc.moveRobot(uID, randDir);
 			}
 		}
 
-
-		// Op branch ctrl
-		for (int j = 0; j < friendlyAdjUnits.size(); j++) {
-			Unit target = friendlyAdjUnits.get(j);
-			switch (target.unitType()) {
-				case Factory:
-					if (gc.canBuild(uID, target.id())) {
-						gc.build(uID, target.id());
-					}
-					break;
-				case Rocket:
-					if (gc.canBuild(uID, target.id())) {
-						gc.build(uID, target.id());
-					}
-					break;
-			}
-		}
 		// First we need sufficient amount of workers to build our econ:
 		if (gc.canReplicate(uID, randDir) && workerCount < 8) {
 			gc.replicate(uID, randDir);
@@ -123,9 +131,6 @@ public class Player {
 		// Blueprint factories
 		if (gc.canBlueprint(uID, UnitType.Factory, randDir) && factoryCount < 8) {
 			gc.blueprint(uID, UnitType.Factory, randDir);
-		}
-		if (gc.canHarvest(uID, randDir)) {
-			gc.harvest(uID, randDir);
 		}
 	}
 
@@ -173,6 +178,7 @@ public class Player {
 				}
 			}
 		} else {
+			// If no enemies around, mv randly
 			if (gc.isMoveReady(uID) && gc.canMove(uID, randDir)) {
 				gc.moveRobot(uID, randDir);
 			}
@@ -257,25 +263,6 @@ public class Player {
 		return team == Team.Blue ? Team.Red : Team.Blue;
 	}
 
-	public static void runAwayFrom(Unit unit, MapLocation loc) {
-		MapLocation uLoc = unit.location().mapLocation();
-		long max = uLoc.distanceSquaredTo(loc);
-		Direction optDir = Direction.Center;
-		long temp;
-		for (int i = 0; i < 8; i++) {
-			MapLocation tempLoc = uLoc.add(dirs[i]);
-			temp = tempLoc.distanceSquaredTo(loc);
-			// Refresh min distance:
-			if (temp > max && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), dirs[i])) {
-				max = temp;
-				optDir = dirs[i];
-			}
-		}
-		if (gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), optDir)) {
-			gc.moveRobot(unit.id(), optDir);
-		}
-	}
-
 	// Generate a rand dir based on the num of dirs desired
 	// if 8: !include center; if 9: include center
 	public static Direction randDir(int n) {
@@ -285,11 +272,10 @@ public class Player {
 				return dirs[i];
 			}
 		}
-		// This is just a placeholder, I must return something for definite
 		return Direction.Center;
 	}
 
-	// A primative path-finding method
+	// A primative path-finding method.
 	public static void findPathTo(Unit unit, MapLocation dest) {
 		MapLocation src = unit.location().mapLocation();
 		long min = src.distanceSquaredTo(dest);
@@ -309,6 +295,27 @@ public class Player {
 		}
 	}
 
+	// The counterpart of findPathTo(), having the exact same architecture.
+	public static void runAwayFrom(Unit unit, MapLocation loc) {
+		MapLocation uLoc = unit.location().mapLocation();
+		long max = uLoc.distanceSquaredTo(loc);
+		Direction optDir = Direction.Center;
+		long temp;
+		for (int i = 0; i < 8; i++) {
+			MapLocation tempLoc = uLoc.add(dirs[i]);
+			temp = tempLoc.distanceSquaredTo(loc);
+			// Refresh min distance:
+			if (temp > max && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), dirs[i])) {
+				max = temp;
+				optDir = dirs[i];
+			}
+		}
+		if (gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), optDir)) {
+			gc.moveRobot(unit.id(), optDir);
+		}
+	}
+
+	// Self-explanatory methods for statistics.
 	public static void clrStatistics() {
 		workerCount = 0;
 		knightCount = 0;
