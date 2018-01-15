@@ -16,6 +16,11 @@ public class Player {
 	public static int healerCount = 0;
 	public static int factoryCount = 0;
 	public static int rocketCount = 0;
+	// Shared array channels
+	public static final long C_ELOC_X = 0;
+	public static final long C_ELOC_Y = 1;
+	// Others
+	public static boolean eLocNotEmpty = false;
 
     public static void main(String[] args) {
 		// Initialization
@@ -162,6 +167,7 @@ public class Player {
 			// Nearest enemy initialization
 			int eID = nearestUnit(unit, enemies).id();
 			MapLocation eLoc = nearestUnit(unit, enemies).location().mapLocation();
+			reportELoc(eLoc);
 			long distanceSquaredToEnemy = uLoc.distanceSquaredTo(eLoc);
 			// React differently depends on distance to enemy
 			if (distanceSquaredToEnemy < unit.rangerCannotAttackRange()) {
@@ -178,6 +184,14 @@ public class Player {
 				}
 			}
 		} else {
+			// If there are sufficient amount of rangers on earth, march for Mars!
+			// Developing…
+			// if (rangerCount > 4 * workerCount) {
+			// 	findPathTo(unit, )
+			// } else
+			if (eLocNotEmpty) {
+				findPathTo(unit, getELoc());
+			}
 			// If no enemies around, mv randly
 			if (gc.isMoveReady(uID) && gc.canMove(uID, randDir)) {
 				gc.moveRobot(uID, randDir);
@@ -273,6 +287,25 @@ public class Player {
 			}
 		}
 		return Direction.Center;
+	}
+
+	// Simplify the ps of w r array
+	public static int read(long channel) {
+		return gc.getTeamArray(gc.planet()).get(channel);
+	}
+
+	public static void write(long channel, int value) {
+		gc.writeTeamArray(channel, value);
+	}
+
+	public static void reportELoc(MapLocation eLoc) {
+		eLocNotEmpty = true;
+		write(C_ELOC_X, eLoc.getX());
+		write(C_ELOC_Y, eLoc.getY());
+	}
+
+	public static MapLocation getELoc() {
+		return new MapLocation(gc.planet(), read(C_ELOC_X), read(C_ELOC_Y));
 	}
 
 	// A primative path-finding method.
