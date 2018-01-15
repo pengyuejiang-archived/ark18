@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.ArrayList;
 public class Player {
 
+
     public static Random RAND = new Random();
 
     public static ArrayList<MapLocation> knownEnemyLocations=new ArrayList<MapLocation>();
@@ -36,7 +37,6 @@ public class Player {
 
         // Connect to the manager, starting the game
         GameController gc = new GameController();
-        GameMap gm = new GameMap();
         Team myteam = gc.team();
         Team enemyTeam;
         if (myteam==Team.Blue){
@@ -65,10 +65,9 @@ public class Player {
 
         //Constants
         int workerLimit = 10;
-        int factoryLimit = 6;
+        int factoryLimit = 5;
         int rangerLimit = 30;
         int rocketLimit = 1;
-
 
         //The code in the loop runs each round
         while (true) {
@@ -192,11 +191,12 @@ public class Player {
                         if(enemies.size()>0) {
                             knownEnemyLocations.add(enemies.get(0).location().mapLocation());
                         }
-                        if(gc.isAttackReady(uid)){
-                            Unit targetUnit = gc.senseUnitAtLocation(knownEnemyLocations.get(0));
+                        if(gc.isAttackReady(uid) && enemies.size()>0){
+                            Unit targetUnit = enemies.get(0);
                             if (targetUnit!=null && gc.canAttack(uid,targetUnit.id())){
                                 gc.attack(uid,targetUnit.id());
                             }
+                            break;
                         }
                         //Move randomly
                         if(gc.isMoveReady(uid)){
@@ -221,24 +221,34 @@ public class Player {
                         break;
                     case Rocket:
                         VecUnit	nearbyWorker = gc.senseNearbyUnitsByType(maploc,2,UnitType.Worker);
-                            for (int j = 0; j < nearbyWorker.size(); j++) {
+                        if(nearbyWorker.size()>0) {
+                        for (int j = 0; j < nearbyWorker.size(); j++) {
                             Unit other = nearbyWorker.get(j);
-                            if(gc.canLoad(uid,other.id()))
-                            {
-                                gc.load(uid,other.id());
+                            if (gc.canLoad(uid, other.id())) {
+                                gc.load(uid, other.id());
                                 break;
                             }
                         }
-                        VecUnitID isLoaded = unit.structureGarrison();
-                            for (int n = 0; n < 10; n++) {
-                                long j = (int) Math.random() * gm.getMars_map().getHeight();
-                                long k = (int) Math.random() * gm.getMars_map().getWidth();
-                                MapLocation landingLoc = new MapLocation(Planet.Mars,(int)j,(int)k);
-                                if (gc.canLaunchRocket(uid, landingLoc) && isLoaded.size() > 0 && gm.getMars_map().isPassableTerrainAt(landingLoc) == 1) {
-                                    gc.launchRocket(uid, landingLoc);
+                    }
+                        if(unit.location().isOnPlanet(Planet.Mars)){
+                            for (int j = 0; j < directions.length; j++){
+                                dir = directions[j];
+                                if(gc.canUnload(uid,dir)){
+                                    gc.unload(uid,dir);
                                     break;
                                 }
                             }
+                        }
+                            while (unit.location().isOnPlanet(Planet.Earth) && gc.canUnload(uid,dir)) {
+                            int j = (int) (Math.random() * gc.startingMap(Planet.Mars).getHeight());
+                            int k = (int) (Math.random() * gc.startingMap(Planet.Mars).getWidth());
+                            MapLocation landingLoc = new MapLocation(Planet.Mars,j, k);
+                            System.out.println(j + " " + k);
+                            if (gc.canLaunchRocket(uid, landingLoc) && gc.startingMap(Planet.Mars).isPassableTerrainAt(landingLoc) == 1) {
+                                gc.launchRocket(uid, landingLoc);
+                                break;
+                            }
+                        }
                         break;
                 }
             }
