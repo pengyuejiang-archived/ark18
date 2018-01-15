@@ -1,7 +1,10 @@
 import bc.*;
+import java.util.Random;
+import java.util.ArrayList;
 
 public class Player {
 
+    public static Random RAND = new Random();
     // Useful fields that are needed constantly, globally
     public static GameController gc = new GameController();
     public static Direction[] dirs = Direction.values();
@@ -16,6 +19,11 @@ public class Player {
     public static int healerCount = 0;
     public static int factoryCount = 0;
     public static int rocketCount = 0;
+    //Unit constants
+    public static int workerLimit = 10;
+    public static int factoryLimit = 5;
+    public static int rangerLimit = 30;
+    public static int rocketLimit = 1;
     // Shared array channels
     public static final long C_ELOC_X = 0;
     public static final long C_ELOC_Y = 1;
@@ -101,41 +109,52 @@ public class Player {
             // Escape from the evil hands of enemies!
             runAwayFrom(unit, eLoc);
         } else {
-            // First check if there are Ks around
-            if (gc.canHarvest(uID, randDir)) {
-                gc.harvest(uID, randDir);
-            }
-            // Since it doesn't conflict with other actions
-			/* Pseudo-code:
-			if (mines aound) {
-				mine
-			}
-			if (constructions around) {
-				construct
-			} else {
-				mv randly }
-			*/
-            for (int j = 0; j < friendlyAdjUnits.size(); j++) {
-                Unit target = friendlyAdjUnits.get(j);
-                if (target.unitType() == UnitType.Factory || target.unitType() == UnitType.Rocket) {
-                    if (gc.canBuild(uID, target.id())) {
-                        projectsAround = true;
-                        gc.build(uID, target.id());
+            //Replicate first
+            if (workerCount < workerLimit && Math.random() < 0.5) {
+                for (int j = 0; j < dirs.length; j++) {
+                    if (gc.canReplicate(uID, dirs[j])) {
+                        gc.replicate(uID, dirs[j]);
+
                     }
                 }
             }
-            if (gc.isMoveReady(uID) && gc.canMove(uID, randDir) && !projectsAround) {
-                gc.moveRobot(uID, randDir);
-            }
-        }
+            //Build first
+            VecUnit nearbyUnits = gc.senseNearbyUnits(uLoc, 2);
+            for (int j = 0; j < nearbyUnits.size(); j++) {
+                Unit other = nearbyUnits.get(j);
+                if (gc.canBuild(uID, other.id())) {
+                    gc.build(uID, other.id());
 
-        // First we need sufficient amount of workers to build our econ:
-        if (gc.canReplicate(uID, randDir) && workerCount < 8) {
-            gc.replicate(uID, randDir);
-        }
-        // Blueprint factories
-        if (gc.canBlueprint(uID, UnitType.Factory, randDir) && factoryCount < 8) {
-            gc.blueprint(uID, UnitType.Factory, randDir);
+                }
+            }
+            //Then start building factories
+            for (int j = 0; j < dirs.length; j++) {
+                if (factoryCount < factoryLimit && gc.canBlueprint(uID, UnitType.Factory, dirs[j])) {
+                    gc.blueprint(uID, UnitType.Factory, dirs[j]);
+
+                }
+            }
+            //Try build 1 rocket
+            for (int j = 0; j < dirs.length; j++) {
+                if (rocketCount < rocketLimit && gc.canBlueprint(uID, UnitType.Rocket, dirs[j])) {
+                    gc.blueprint(uID, UnitType.Rocket, dirs[j]);
+
+                }
+            }
+            //Randomly harvest (Should be able to look for resources)
+            for (int j = 0; j < dirs.length; j++) {
+                if (gc.canHarvest(uID, dirs[j])) {
+                    gc.harvest(uID, dirs[j]);
+
+                }
+            }
+            if (gc.isMoveReady(uID)) {
+                for (int j = 0; j < dirs.length; j++) {
+                    if (gc.isMoveReady(uID) && gc.canMove(uID, dirs[j])) {
+                        gc.moveRobot(unit.id(), dirs[j]);
+                    }
+                }
+            }
         }
     }
 
@@ -224,7 +243,7 @@ public class Player {
         UnitType uType = unit.unitType();
         MapLocation uLoc = unit.location().mapLocation();
 
-        // Start from north, check if factory can unload unit in the given dir.
+        // Start from north, check if factory can unload unit in the given dirs[j].
         for (int j = 0; j < dirs.length; j++) {
             if (gc.canUnload(uID, dirs[j])) {
                 gc.unload(uID, dirs[j]);
@@ -239,35 +258,43 @@ public class Player {
     }
 
     public static void runRocket(Unit unit) {
-
-        // Universal initialization
         int uID = unit.id();
         UnitType uType = unit.unitType();
         MapLocation uLoc = unit.location().mapLocation();
 
+        // Specific initialization
+        Direction randDir = randDir(8);
+        boolean projectsAround = false;
+        VecUnit nearbyWorker = gc.senseNearbyUnitsByType(uLoc,1, UnitType.Worker);
+        if (gc.canUnload(uID,randDir)){
+            while (unit.location().isOnPlanet(Planet.Earth)) {
+                int j = (int) (Math.random() * gc.startingMap(Planet.Mars).getHeight());
+                int k = (int) (Math.random() * gc.startingMap(Planet.Mars).getWidth());
+                MapLocation landingLoc = new MapLocation(Planet.Mars, j, k);
+                if (gc.canLaunchRocket(uID, landingLoc) && gc.startingMap(Planet.Mars).isPassableTerrainAt(landingLoc) == 1) {
+                    gc.launchRocket(uID, landingLoc);
+                }
+            }
+        }
+        if (nearbyWorker.size() > 0) {
+            for (int j = 0; j < nearbyWorker.size(); j++) {
+                Unit other = nearbyWorker.get(j);
+                if (gc.canLoad(uID, other.id())) {
+                    gc.load(uID, other.id());
+                }
+            }
+        }
+        if (unit.location().isOnPlanet(Planet.Mars)) {
+            for (int j = 0; j < dirs.length; j++) {
+                if (gc.canUnload(uID, dirs[j])) {
+                    gc.unload(uID, dirs[j]);
+
+                }
+            }
+        }
+
+
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     // Helper funcs
@@ -277,16 +304,22 @@ public class Player {
         return team == Team.Blue ? Team.Red : Team.Blue;
     }
 
-    // Generate a rand dir based on the num of dirs desired
+    // Generate a rand dirs[j] based on the num of dirs desired
     // if 8: !include center; if 9: include center
     public static Direction randDir(int n) {
-        int rand = (int)(Math.random() * n);
+        int rand = (int) (Math.random() * n);
         for (int i = 0; i < n; i++) {
             if (i == rand) {
                 return dirs[i];
             }
         }
         return Direction.Center;
+    }
+
+    public static Direction getRandomDirection(){
+        Direction[] directions = Direction.values();
+        int i = RAND.nextInt(directions.length);
+        return directions[i];
     }
 
     // Simplify the ps of w r array
@@ -404,5 +437,4 @@ public class Player {
             }
         }
     }
-
 }
