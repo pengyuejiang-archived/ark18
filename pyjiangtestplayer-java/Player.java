@@ -19,7 +19,7 @@ public class Player {
 
     public static void main(String[] args) {
 		// Initialization
-		// Set research queue:
+		// Set research queue
 		gc.queueResearch(UnitType.Worker);
 		gc.queueResearch(UnitType.Rocket);
 		gc.queueResearch(UnitType.Ranger);
@@ -90,8 +90,8 @@ public class Player {
 		// Handling enemies is the priority, if there are some enemies…
 		if (enemies.size() > 0) {
 			// Nearest enemy initialization
-			int eID = enemies.get(0).id();
-			MapLocation eLoc = enemies.get(0).location().mapLocation();
+			int eID = nearestUnit(unit, enemies).id();
+			MapLocation eLoc = nearestUnit(unit, enemies).location().mapLocation();
 			long distanceSquaredToEnemy = uLoc.distanceSquaredTo(eLoc);
 			// Escape from the evil hands of enemies!
 			runAwayFrom(unit, eLoc);
@@ -160,8 +160,8 @@ public class Player {
 		// Handling enemies is the priority, if there are some enemies…
 		if (enemies.size() > 0) {
 			// Nearest enemy initialization
-			int eID = enemies.get(0).id();
-			MapLocation eLoc = enemies.get(0).location().mapLocation();
+			int eID = nearestUnit(unit, enemies).id();
+			MapLocation eLoc = nearestUnit(unit, enemies).location().mapLocation();
 			long distanceSquaredToEnemy = uLoc.distanceSquaredTo(eLoc);
 			// React differently depends on distance to enemy
 			if (distanceSquaredToEnemy < unit.rangerCannotAttackRange()) {
@@ -313,6 +313,21 @@ public class Player {
 		if (gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), optDir)) {
 			gc.moveRobot(unit.id(), optDir);
 		}
+	}
+
+	public static Unit nearestUnit(Unit unit, VecUnit units) {
+		MapLocation uLoc = unit.location().mapLocation();
+		long min = Long.MAX_VALUE;
+		// I have to init this, it's required
+		Unit nearestUnit = unit;
+		for (int i = 0; i < units.size(); i++) {
+			MapLocation tLoc = units.get(i).location().mapLocation();
+			if (uLoc.distanceSquaredTo(tLoc) < min) {
+				min = uLoc.distanceSquaredTo(tLoc);
+				nearestUnit = units.get(i);
+			}
+		}
+		return nearestUnit;
 	}
 
 	// Self-explanatory methods for statistics.
