@@ -185,8 +185,18 @@ public class rc {
         Direction randDir = hf.randDir(8);
         boolean projectsAround = false;
         VecUnit nearbyWorker = gc.senseNearbyUnitsByType(uLoc,2, UnitType.Worker);
+        VecUnit nearbyUnits = gc.senseNearbyUnitsByTeam(uLoc,2,f.MY_TEAM);
         VecUnitID isLoaded = unit.structureGarrison();
 
+        if (nearbyUnits.size() > 0 && isLoaded.size() == 1) {
+            for (int j = 0; j < nearbyUnits.size(); j++) {
+                Unit other = nearbyUnits.get(j);
+                if (gc.canLoad(uID, other.id())) {
+                    gc.load(uID, other.id());
+                    break;
+                }
+            }
+        }
         if (nearbyWorker.size() > 0) {
             for (int j = 0; j < nearbyWorker.size(); j++) {
                 Unit other = nearbyWorker.get(j);
@@ -205,7 +215,7 @@ public class rc {
             }
         }
 
-        while (unit.location().isOnPlanet(Planet.Earth)&& isLoaded.size() > 0) {
+        while (unit.location().isOnPlanet(Planet.Earth)&& isLoaded.size() > 1) {
             int j = (int) (Math.random() * gc.startingMap(Planet.Mars).getHeight());
             int k = (int) (Math.random() * gc.startingMap(Planet.Mars).getWidth());
             MapLocation landingLoc = new MapLocation(Planet.Mars, j, k);
