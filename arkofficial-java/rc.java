@@ -27,8 +27,8 @@ public class rc {
             int eID = hf.nearestUnit(unit, enemies).id();
             MapLocation eLoc = hf.nearestUnit(unit, enemies).location().mapLocation();
             long distanceSquaredToEnemy = uLoc.distanceSquaredTo(eLoc);
-			// Report eLoc
-			hf.reportELoc(eLoc);
+            // Report eLoc
+            hf.reportELoc(eLoc);
             // Escape from the evil hands of enemies!
             hf.runAwayFrom(unit, eLoc);
         } else {
@@ -67,6 +67,10 @@ public class rc {
         // Blueprint factories
         if (gc.canBlueprint(uID, UnitType.Factory, randDir) && f.factoryCount < 8) {
             gc.blueprint(uID, UnitType.Factory, randDir);
+        }
+        //Blueprint Rockets
+        if (gc.canBlueprint(uID, UnitType.Rocket, randDir) && f.rocketCount < 1) {
+            gc.blueprint(uID, UnitType.Rocket, randDir);
         }
     }
 
@@ -176,6 +180,40 @@ public class rc {
         int uID = unit.id();
         UnitType uType = unit.unitType();
         MapLocation uLoc = unit.location().mapLocation();
+
+        // Specific initialization
+        Direction randDir = hf.randDir(8);
+        boolean projectsAround = false;
+        VecUnit nearbyWorker = gc.senseNearbyUnitsByType(uLoc,2, UnitType.Worker);
+        VecUnitID isLoaded = unit.structureGarrison();
+
+        if (nearbyWorker.size() > 0) {
+            for (int j = 0; j < nearbyWorker.size(); j++) {
+                Unit other = nearbyWorker.get(j);
+                if (gc.canLoad(uID, other.id())) {
+                    gc.load(uID, other.id());
+                    break;
+                }
+            }
+        }
+        if (unit.location().isOnPlanet(Planet.Mars)) {
+            for (int j = 0; j < f.dirs.length; j++) {
+                if (gc.canUnload(uID, f.dirs[j])) {
+                    gc.unload(uID, f.dirs[j]);
+                    break;
+                }
+            }
+        }
+
+        while (unit.location().isOnPlanet(Planet.Earth)&& isLoaded.size() > 0) {
+            int j = (int) (Math.random() * gc.startingMap(Planet.Mars).getHeight());
+            int k = (int) (Math.random() * gc.startingMap(Planet.Mars).getWidth());
+            MapLocation landingLoc = new MapLocation(Planet.Mars, j, k);
+            if (gc.canLaunchRocket(uID, landingLoc) && gc.startingMap(Planet.Mars).isPassableTerrainAt(landingLoc) == 1) {
+                gc.launchRocket(uID, landingLoc);
+                break;
+            }
+        }
 
     }
 
