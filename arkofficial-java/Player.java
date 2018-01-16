@@ -41,7 +41,7 @@ public class Player {
                         rc.runFactory(planet, unit);
                         break;
                     case Rocket:
-                        rc.runFactory(planet, unit);
+                        rc.runRocket(planet, unit);
                         break;
                 }
             }
