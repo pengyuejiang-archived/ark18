@@ -171,6 +171,10 @@ public class rc {
         if (gc.canProduceRobot(uID, UnitType.Ranger)) {
             gc.produceRobot(uID, UnitType.Ranger);
         }
+		// Backup production of workers in case they all died.
+		if (gc.canProduceRobot(uID, UnitType.Worker) && f.workerCount == 0) {
+            gc.produceRobot(uID, UnitType.Worker);
+        }
 
     }
 
@@ -184,12 +188,12 @@ public class rc {
         // Specific initialization
         Direction randDir = hf.randDir(8);
         boolean projectsAround = false;
-        VecUnit nearbyWorker = gc.senseNearbyUnitsByType(uLoc,2, UnitType.Worker);
+        VecUnit nearbyUnits = gc.senseNearbyUnitsByTeam(uLoc, 2, f.MY_TEAM);
         VecUnitID isLoaded = unit.structureGarrison();
 
-        if (nearbyWorker.size() > 0) {
-            for (int j = 0; j < nearbyWorker.size(); j++) {
-                Unit other = nearbyWorker.get(j);
+        if (nearbyUnits.size() > 0) {
+            for (int j = 0; j < nearbyUnits.size(); j++) {
+                Unit other = nearbyUnits.get(j);
                 if (gc.canLoad(uID, other.id())) {
                     gc.load(uID, other.id());
                     break;
@@ -205,7 +209,7 @@ public class rc {
             }
         }
 
-        while (unit.location().isOnPlanet(Planet.Earth)&& isLoaded.size() > 0) {
+        while (unit.location().isOnPlanet(Planet.Earth) && isLoaded.size() > 0) {
             int j = (int) (Math.random() * gc.startingMap(Planet.Mars).getHeight());
             int k = (int) (Math.random() * gc.startingMap(Planet.Mars).getWidth());
             MapLocation landingLoc = new MapLocation(Planet.Mars, j, k);
