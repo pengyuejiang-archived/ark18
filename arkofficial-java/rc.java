@@ -167,6 +167,7 @@ public class rc {
             }
         }
 
+	    
         // build rangers:
         if (gc.canProduceRobot(uID, UnitType.Ranger)) {
             gc.produceRobot(uID, UnitType.Ranger);
@@ -209,7 +210,7 @@ public class rc {
             }
         }
 
-        while (unit.location().isOnPlanet(Planet.Earth) && isLoaded.size() > 0) {
+        while (unit.location().isOnPlanet(Planet.Earth) && isLoaded.size() > 2) {
             int j = (int) (Math.random() * gc.startingMap(Planet.Mars).getHeight());
             int k = (int) (Math.random() * gc.startingMap(Planet.Mars).getWidth());
             MapLocation landingLoc = new MapLocation(Planet.Mars, j, k);
