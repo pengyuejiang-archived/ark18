@@ -8,13 +8,7 @@ public class hf {
 	// Generate a rand dir based on the num of dirs desired
     // if 8: !include center; if 9: include center
     public static Direction randDir(int n) {
-        int rand = (int)(Math.random() * n);
-        for (int i = 0; i < n; i++) {
-            if (i == rand) {
-                return f.dirs[i];
-            }
-        }
-        return Direction.Center;
+		return f.dirs[(int)(Math.random() * n)];
     }
 
 	public static Unit nearestUnit(Unit unit, VecUnit units) {

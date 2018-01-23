@@ -14,7 +14,7 @@ public class rc {
 
         // Specific initialization
         Direction randDir = hf.randDir(8);
-        boolean projectsAround = false;
+		boolean projectsAround = false;
 
         // Footprinting
         VecUnit enemies = gc.senseNearbyUnitsByTeam(uLoc, unit.visionRange(), f.ENEMY);
@@ -32,36 +32,41 @@ public class rc {
             // Escape from the evil hands of enemies!
             hf.runAwayFrom(unit, eLoc);
         } else {
-            // First check if there are Ks around
-            if (gc.canHarvest(uID, randDir)) {
-                gc.harvest(uID, randDir);
-            }
-            for (int j = 0; j < friendlyAdjUnits.size(); j++) {
+			/*
+			 * Priority list:
+			 * 1. Replicate
+			 * 2. Build
+			 * 3. Blueprint Factory
+			 * 4. Blueprint Rocket
+			 * 5. Harvest
+			 * 6. Mv Randly
+			 */
+			for (int j = 0; j < friendlyAdjUnits.size(); j++) {
                 Unit target = friendlyAdjUnits.get(j);
                 if (target.unitType() == UnitType.Factory || target.unitType() == UnitType.Rocket) {
                     if (gc.canBuild(uID, target.id())) {
-                        projectsAround = true;
+						projectsAround = true;
                         gc.build(uID, target.id());
                     }
                 }
             }
+			if (gc.canReplicate(uID, randDir) && f.workerCount < 8) {
+				gc.replicate(uID, randDir);
+			}
+			if (gc.canBlueprint(uID, UnitType.Factory, randDir) && f.factoryCount < 8) {
+				gc.blueprint(uID, UnitType.Factory, randDir);
+			}
+			if (gc.canBlueprint(uID, UnitType.Rocket, randDir) && f.rocketCount < 1) {
+				gc.blueprint(uID, UnitType.Rocket, randDir);
+			}
+			if (gc.canHarvest(uID, randDir)) {
+				gc.harvest(uID, randDir);
+			}
             if (gc.isMoveReady(uID) && gc.canMove(uID, randDir) && !projectsAround) {
                 gc.moveRobot(uID, randDir);
             }
         }
 
-        // First we need sufficient amount of workers to build our econ:
-        if (gc.canReplicate(uID, randDir) && f.workerCount < 8) {
-            gc.replicate(uID, randDir);
-        }
-        // Blueprint factories
-        if (gc.canBlueprint(uID, UnitType.Factory, randDir) && f.factoryCount < 8) {
-            gc.blueprint(uID, UnitType.Factory, randDir);
-        }
-        //Blueprint Rockets
-        if (gc.canBlueprint(uID, UnitType.Rocket, randDir) && f.rocketCount < 1) {
-            gc.blueprint(uID, UnitType.Rocket, randDir);
-        }
     }
 
     public static void runKnight(Planet planet, Unit unit) {
