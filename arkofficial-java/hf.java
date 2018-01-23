@@ -5,11 +5,6 @@ public class hf {
 	// Import gc
 	static GameController gc = Player.gc;
 
-	// I am surprised that there are actually no methods which rets the enemy team.
-    public static Team enemyOf(Team team) {
-        return team == Team.Blue ? Team.Red : Team.Blue;
-    }
-
 	// Generate a rand dir based on the num of dirs desired
     // if 8: !include center; if 9: include center
     public static Direction randDir(int n) {
@@ -110,13 +105,7 @@ public class hf {
     }
 
 	private static void clrStatistics() {
-		f.workerCount = 0;
-		f.knightCount = 0;
-		f.rangerCount = 0;
-		f.mageCount = 0;
-		f.healerCount = 0;
-		f.factoryCount = 0;
-		f.rocketCount = 0;
+		f.workerCount = f.knightCount = f.rangerCount = f.mageCount = f.healerCount = f.factoryCount = f.rocketCount = 0;
 	}
 
 	public static void reportELoc(MapLocation eLoc) {
@@ -130,19 +119,11 @@ public class hf {
 	}
 
 	public static MapLocation getELoc(Planet planet) {
-		if (planet == Planet.Earth) {
-			return f.eLocEarth;
-		} else {
-			return f.eLocMars;
-		}
+		return planet == Planet.Earth ? f.eLocEarth : f.eLocMars;
 	}
 
 	public static boolean eLocInitialized(Planet planet) {
-		if (planet == Planet.Earth) {
-			return f.eLocEarthInitialized;
-		} else {
-			return f.eLocMarsInitialized;
-		}
+		return planet == Planet.Earth ? f.eLocEarthInitialized : f.eLocMarsInitialized;
 	}
 
 }

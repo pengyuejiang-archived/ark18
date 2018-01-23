@@ -7,7 +7,7 @@ public class f {
 
 	// Teams
 	public static final Team MY_TEAM = gc.team();
-	public static final Team ENEMY = hf.enemyOf(MY_TEAM);
+	public static final Team ENEMY = MY_TEAM == Team.Blue ? Team.Red : Team.Blue;
 
 	// Directions
 	public static Direction[] dirs = Direction.values();

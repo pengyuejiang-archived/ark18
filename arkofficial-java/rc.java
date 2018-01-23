@@ -36,16 +36,6 @@ public class rc {
             if (gc.canHarvest(uID, randDir)) {
                 gc.harvest(uID, randDir);
             }
-            // Since it doesn't conflict with other actions
-			/* Pseudo-code:
-			if (mines aound) {
-				mine
-			}
-			if (constructions around) {
-				construct
-			} else {
-				mv randly }
-			*/
             for (int j = 0; j < friendlyAdjUnits.size(); j++) {
                 Unit target = friendlyAdjUnits.get(j);
                 if (target.unitType() == UnitType.Factory || target.unitType() == UnitType.Rocket) {
@@ -167,7 +157,7 @@ public class rc {
             }
         }
 
-	    
+
         // build rangers:
         if (gc.canProduceRobot(uID, UnitType.Ranger)) {
             gc.produceRobot(uID, UnitType.Ranger);
