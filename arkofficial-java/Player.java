@@ -20,7 +20,7 @@ public class Player {
             System.out.println("Current round: " + gc.round());
             VecUnit units = gc.myUnits();
 			hf.runStatistics();
-			f.unitCount = unit.size();
+			f.unitCount = (int)units.size();
             for (int i = 0; i < units.size(); i++) {
                 Unit unit = units.get(i);
 				if (!unit.location().isOnMap()) continue;

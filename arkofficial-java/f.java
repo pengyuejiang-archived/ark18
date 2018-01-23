@@ -23,12 +23,12 @@ public class f {
 	public static int unitCount = 0;
 
 	// Population ctrl
-	// BASE_INDEX: the basic scale of everything else
-	public static final int WORKER_BASE_INDEX = 8;
-	public static final int ROCKET_BASE_INDEX = 1;
-	// RATIO: the ratio between one and another unit
-	public static final int RANGER_WORKER_RATIO = 4;
-	public static final int RANGER_HEALER_RATIO = 4;
+	// base index: the basic scale of everything else
+	public static int workerBaseIndex = 8;
+	public static int rocketBaseIndex = 1;
+	// ratio: the ratio between one and another unit
+	public static int rangerWorkerRatio = 4;
+	public static int rangerHealerRatio = 4;
 
 	// Earth
 	public static MapLocation eLocEarth = new MapLocation(Planet.Earth, 0, 0);
