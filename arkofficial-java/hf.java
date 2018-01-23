@@ -1,4 +1,6 @@
 import bc.*;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class hf {
 
@@ -64,6 +66,51 @@ public class hf {
         if (gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), optDir)) {
             gc.moveRobot(unit.id(), optDir);
         }
+    }
+
+    //Get Optimal Launching time
+    public static long getNextLaunchTime(){
+        long period = gc.orbitPattern().getPeriod();
+        long duration = gc.orbitPattern().duration(gc.round());
+        long launchRound = gc.round();
+        for (long i = 0; i < 750 / period; i++) {
+            if (gc.round() < (3 / 4 + i) * period) {
+                for (long j = gc.round(); j < (3 / 4 + i) * period / 2; j++) {
+                    long tempDur = gc.orbitPattern().duration(j) + (j - gc.round());
+                    if (tempDur < duration) {
+                        duration = tempDur;
+                        launchRound = j;
+                    }
+                }
+            }
+        }
+        return launchRound;
+    }
+
+    public static Direction bfs(MapLocation start, MapLocation end){
+        int xsize = (int)gc.startingMap(gc.planet()).getWidth();
+        int ysize = (int)gc.startingMap(gc.planet()).getHeight();
+        int visit[][] = new int[xsize][ysize];
+        int stepArr[][] = new int[][]{{-1,0},{1,0},{0,-1},{0,1},{1,1},{1,-1},{-1,1},{-1,-1}};
+        Queue<MapLocation> queue = new LinkedList<MapLocation>();
+        queue.add(start);
+        while (!queue.isEmpty()){
+            MapLocation newLoc = queue.poll();
+            visit[newLoc.getX()][newLoc.getY()] = 1;
+            for(int i = 0; i < 8; i++){
+                int x = newLoc.getX() + stepArr[i][0];
+                int y = newLoc.getY() + stepArr[i][1];
+                if(x == end.getX() && y == end.getX()){
+                    return start.directionTo(queue.element());
+                }
+                MapLocation tryloc = new MapLocation(gc.planet(), x, y);
+                if(x >= 0 && y >= 0 && x < xsize && y < ysize && visit[x][y] == 0 && gc.startingMap(gc.planet()).isPassableTerrainAt(tryloc) == 1){
+                    MapLocation next = new MapLocation(gc.planet(),x,y);
+                    queue.add(next);
+                }
+            }
+        }
+        return Direction.Center;
     }
 
     // Self-explanatory methods for statistics.
