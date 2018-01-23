@@ -112,7 +112,7 @@ public class rc {
             long distanceSquaredToEnemy = uLoc.distanceSquaredTo(eLoc);
 			// Report eLoc
 			hf.reportELoc(eLoc);
-            // React differently depends on distance to enemy
+            // Rangers react differently depends on distance to enemy
             if (distanceSquaredToEnemy < unit.rangerCannotAttackRange()) {
                 if (gc.isMoveReady(uID)) {
                     hf.runAwayFrom(unit, eLoc);
@@ -155,6 +155,38 @@ public class rc {
         UnitType uType = unit.unitType();
         MapLocation uLoc = unit.location().mapLocation();
 
+		// Specific initialization
+        Direction randDir = hf.randDir(8);
+
+        // Footprinting
+        VecUnit enemies = gc.senseNearbyUnitsByTeam(uLoc, unit.visionRange(), f.ENEMY);
+		VecUnit allies = gc.senseNearbyUnitsByTeam(uLoc, unit.attackRange(), f.MY_TEAM);
+
+        // Response mechanism
+        // Handling enemies is the priority, if there are some enemies…
+        if (enemies.size() > 0) {
+            // Nearest enemy initialization
+            int eID = hf.nearestUnit(unit, enemies).id();
+            MapLocation eLoc = hf.nearestUnit(unit, enemies).location().mapLocation();
+            long distanceSquaredToEnemy = uLoc.distanceSquaredTo(eLoc);
+			// Report eLoc
+			hf.reportELoc(eLoc);
+		} else {
+			if (hf.eLocInitialized(planet)) {
+				hf.findPathTo(unit, hf.getELoc(planet));
+			}
+			if (f.assemblyLocInitialized) {
+				hf.findPathTo(unit, f.assemblyLoc);
+			}
+            if (gc.isMoveReady(uID) && gc.canMove(uID, randDir)) {
+                gc.moveRobot(uID, randDir);
+            }
+        }
+		// No matter if there are enemies around, healers heal ppl
+		Unit weakestAlly = hf.getWeakestUnit(allies);
+		if (gc.isHealReady(uID) && gc.canHeal(uID, weakestAlly.id())) {
+			gc.heal(uID, weakestAlly.id());
+		}
     }
 
     public static void runFactory(Planet planet, Unit unit) {
@@ -174,6 +206,11 @@ public class rc {
         // build rangers:
         if (gc.canProduceRobot(uID, UnitType.Ranger) && !(f.rangerCount > f.rangerWorkerRatio * f.workerCount && f.rocketCount < f.rocketBaseIndex)) {
             gc.produceRobot(uID, UnitType.Ranger);
+        }
+
+		// build healers:
+		if (gc.canProduceRobot(uID, UnitType.Healer) && f.healerCount < f.rangerCount / f.rangerHealerRatio) {
+            gc.produceRobot(uID, UnitType.Healer);
         }
 
 		// Backup production of workers in case they all died.

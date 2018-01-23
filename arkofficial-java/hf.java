@@ -167,4 +167,17 @@ public class hf {
         return Direction.Center;
     }
 
+	public static Unit getWeakestUnit(VecUnit units) {
+		long minHP = Long.MAX_VALUE;
+		Unit weakestUnit = units.get(0);
+		for (int i = 0; i < units.size(); i++) {
+			Unit target = units.get(i);
+			if (target.health() < minHP && target.health() != target.maxHealth()) {
+				minHP = target.health();
+				weakestUnit = target;
+			}
+		}
+		return weakestUnit;
+	}
+
 }
