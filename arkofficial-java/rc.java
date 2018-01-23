@@ -14,7 +14,7 @@ public class rc {
 
         // Specific initialization
         Direction randDir = hf.randDir(8);
-		boolean projectsAround = false;
+		boolean movementGranted = true;
 
         // Footprinting
         VecUnit enemies = gc.senseNearbyUnitsByTeam(uLoc, unit.visionRange(), f.ENEMY);
@@ -45,7 +45,7 @@ public class rc {
                 Unit target = friendlyAdjUnits.get(j);
                 if (target.unitType() == UnitType.Factory || target.unitType() == UnitType.Rocket) {
                     if (gc.canBuild(uID, target.id())) {
-						projectsAround = true;
+						movementGranted = false;
                         gc.build(uID, target.id());
                     }
                 }
@@ -53,17 +53,24 @@ public class rc {
 			if (gc.canReplicate(uID, randDir) && f.workerCount < 8) {
 				gc.replicate(uID, randDir);
 			}
-			if (gc.canBlueprint(uID, UnitType.Factory, randDir) && f.factoryCount < 8) {
-				gc.blueprint(uID, UnitType.Factory, randDir);
+			// Since structures can only be built on earth…
+			if (planet == Planet.Earth) {
+				if (gc.canBlueprint(uID, UnitType.Factory, randDir) && f.factoryCount < 8) {
+					gc.blueprint(uID, UnitType.Factory, randDir);
+				}
+				if (gc.canBlueprint(uID, UnitType.Rocket, randDir) && f.rocketCount < 1) {
+					gc.blueprint(uID, UnitType.Rocket, randDir);
+				}
 			}
-			if (gc.canBlueprint(uID, UnitType.Rocket, randDir) && f.rocketCount < 1) {
-				gc.blueprint(uID, UnitType.Rocket, randDir);
-			}
-			if (gc.canHarvest(uID, randDir)) {
-				gc.harvest(uID, randDir);
+			// Adjacent mining
+			for (int i = 0; i < f.dirs.length; i++) {
+				if (gc.canHarvest(uID, f.dirs[i])) {
+					movementGranted = false;
+					gc.harvest(uID, f.dirs[i]);
+				}
 			}
 			// Worker can only mv if they are not building something!
-			if (!projectsAround && gc.isMoveReady(uID)) {
+			if (movementGranted && gc.isMoveReady(uID)) {
 				if (f.assemblyLocInitialized) {
 					hf.findPathTo(unit, f.assemblyLoc);
 				} else if (gc.canMove(uID, randDir)) {
