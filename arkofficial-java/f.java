@@ -23,8 +23,12 @@ public class f {
 
 	// ELoc
 	public static MapLocation eLocEarth = new MapLocation(Planet.Earth, 0, 0);
-	public static MapLocation eLocMars = new MapLocation(Planet.Mars, 0, 0);
 	public static boolean eLocEarthInitialized = false;
+	public static MapLocation eLocMars = new MapLocation(Planet.Mars, 0, 0);
 	public static boolean eLocMarsInitialized = false;
+
+	// Rocket
+	public static MapLocation assemblyLoc = new MapLocation(Planet.Earth, 0, 0);
+	public static boolean assemblyLocInitialized = false;
 
 }

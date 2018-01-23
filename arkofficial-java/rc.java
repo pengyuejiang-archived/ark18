@@ -62,9 +62,14 @@ public class rc {
 			if (gc.canHarvest(uID, randDir)) {
 				gc.harvest(uID, randDir);
 			}
-            if (gc.isMoveReady(uID) && gc.canMove(uID, randDir) && !projectsAround) {
-                gc.moveRobot(uID, randDir);
-            }
+			// Worker can only mv if they are not building something!
+			if (!projectsAround && gc.isMoveReady(uID)) {
+				if (f.assemblyLocInitialized) {
+					hf.findPathTo(unit, f.assemblyLoc);
+				} else if (gc.canMove(uID, randDir)) {
+	                gc.moveRobot(uID, randDir);
+	            }
+			}
         }
 
     }
@@ -115,14 +120,11 @@ public class rc {
                 }
             }
         } else {
-            // If there are sufficient amount of rangers on earth, march for Mars!
-            // Developing…
-            // if (f.rangerCount > 4 * f.workerCount) {
-            // 	findPathTo(unit, )
-            // } else
-            // If no enemies around, mv randly
 			if (hf.eLocInitialized(planet)) {
 				hf.findPathTo(unit, hf.getELoc(planet));
+			}
+			if (f.assemblyLocInitialized) {
+				hf.findPathTo(unit, f.assemblyLoc);
 			}
             if (gc.isMoveReady(uID) && gc.canMove(uID, randDir)) {
                 gc.moveRobot(uID, randDir);
@@ -162,11 +164,11 @@ public class rc {
             }
         }
 
-
         // build rangers:
-        if (gc.canProduceRobot(uID, UnitType.Ranger)) {
+        if (gc.canProduceRobot(uID, UnitType.Ranger) && !(f.rangerCount > 4 * f.workerCount && f.rocketCount < 1)) {
             gc.produceRobot(uID, UnitType.Ranger);
         }
+
 		// Backup production of workers in case they all died.
 		if (gc.canProduceRobot(uID, UnitType.Worker) && f.workerCount == 0) {
             gc.produceRobot(uID, UnitType.Worker);
@@ -181,39 +183,44 @@ public class rc {
         UnitType uType = unit.unitType();
         MapLocation uLoc = unit.location().mapLocation();
 
-        // Specific initialization
-        Direction randDir = hf.randDir(8);
-        boolean projectsAround = false;
-        VecUnit nearbyUnits = gc.senseNearbyUnitsByTeam(uLoc, 2, f.MY_TEAM);
-        VecUnitID isLoaded = unit.structureGarrison();
-
-        if (nearbyUnits.size() > 0) {
-            for (int j = 0; j < nearbyUnits.size(); j++) {
-                Unit other = nearbyUnits.get(j);
-                if (gc.canLoad(uID, other.id())) {
-                    gc.load(uID, other.id());
-                    break;
-                }
-            }
-        }
-        if (unit.location().isOnPlanet(Planet.Mars)) {
-            for (int j = 0; j < f.dirs.length; j++) {
-                if (gc.canUnload(uID, f.dirs[j])) {
-                    gc.unload(uID, f.dirs[j]);
-                    break;
-                }
-            }
-        }
-
-        while (unit.location().isOnPlanet(Planet.Earth) && isLoaded.size() > 2) {
-            int j = (int) (Math.random() * gc.startingMap(Planet.Mars).getHeight());
-            int k = (int) (Math.random() * gc.startingMap(Planet.Mars).getWidth());
-            MapLocation landingLoc = new MapLocation(Planet.Mars, j, k);
-            if (gc.canLaunchRocket(uID, landingLoc) && gc.startingMap(Planet.Mars).isPassableTerrainAt(landingLoc) == 1) {
-                gc.launchRocket(uID, landingLoc);
-                break;
-            }
-        }
+		// Differentiate ops on Earth and Mars.
+		if (planet == Planet.Earth) {
+			// Specialized initialization
+			// This must be contained within the "Earth" section, otherwise they will just stick to the rockets on Mars.
+			if (unit.structureIsBuilt() == 1) {
+				f.assemblyLoc = uLoc;
+				f.assemblyLocInitialized = true;
+			}
+			VecUnit colonists = gc.senseNearbyUnitsByTeam(uLoc, 2, f.MY_TEAM);
+	        VecUnitID colonistLoadedIDs = unit.structureGarrison();
+			if (colonistLoadedIDs.size() < unit.structureMaxCapacity()) {
+				for (int i = 0; i < colonists.size(); i++) {
+					Unit colonist = colonists.get(i);
+					if (gc.canLoad(uID, colonist.id())) {
+						gc.load(uID, colonist.id());
+						break;
+					}
+				}
+			} else {
+				while (true) {
+					int targetX = (int)(Math.random() * gc.startingMap(Planet.Mars).getWidth());
+		            int targetY = (int)(Math.random() * gc.startingMap(Planet.Mars).getHeight());
+		            MapLocation landingLoc = new MapLocation(Planet.Mars, targetX, targetY);
+		            if (gc.canLaunchRocket(uID, landingLoc) && gc.startingMap(Planet.Mars).isPassableTerrainAt(landingLoc) == 1) {
+		                gc.launchRocket(uID, landingLoc);
+						f.assemblyLocInitialized = false;
+		                break;
+		            }
+		        }
+			}
+		} else {
+			for (int i = 0; i < f.dirs.length; i++) {
+				if (gc.canUnload(uID, f.dirs[i])) {
+					gc.unload(uID, f.dirs[i]);
+					break;
+				}
+			}
+		}
 
     }
 

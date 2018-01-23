@@ -9,9 +9,11 @@ public class Player {
 
         gc.queueResearch(UnitType.Worker);
         gc.queueResearch(UnitType.Rocket);
-        gc.queueResearch(UnitType.Ranger);
-        gc.queueResearch(UnitType.Ranger);
-        gc.queueResearch(UnitType.Ranger);
+		gc.queueResearch(UnitType.Ranger);
+		gc.queueResearch(UnitType.Ranger);
+        gc.queueResearch(UnitType.Rocket);
+        gc.queueResearch(UnitType.Rocket);
+		gc.queueResearch(UnitType.Ranger);
 
 		Planet planet = gc.planet();
         while (true) {
