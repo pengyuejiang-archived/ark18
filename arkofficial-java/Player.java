@@ -18,8 +18,9 @@ public class Player {
 		Planet planet = gc.planet();
         while (true) {
             System.out.println("Current round: " + gc.round());
-            hf.runStatistics();
             VecUnit units = gc.myUnits();
+			hf.runStatistics();
+			f.unitCount = unit.size();
             for (int i = 0; i < units.size(); i++) {
                 Unit unit = units.get(i);
 				if (!unit.location().isOnMap()) continue;

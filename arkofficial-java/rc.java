@@ -50,15 +50,15 @@ public class rc {
                     }
                 }
             }
-			if (gc.canReplicate(uID, randDir) && f.workerCount < 8) {
+			if (gc.canReplicate(uID, randDir) && f.workerCount < WORKER_BASE_INDEX) {
 				gc.replicate(uID, randDir);
 			}
 			// Since structures can only be built on earth…
 			if (planet == Planet.Earth) {
-				if (gc.canBlueprint(uID, UnitType.Factory, randDir) && f.factoryCount < 8) {
+				if (gc.canBlueprint(uID, UnitType.Factory, randDir) && f.factoryCount < WORKER_BASE_INDEX) {
 					gc.blueprint(uID, UnitType.Factory, randDir);
 				}
-				if (gc.canBlueprint(uID, UnitType.Rocket, randDir) && f.rocketCount < 1) {
+				if (gc.canBlueprint(uID, UnitType.Rocket, randDir) && f.rocketCount < ROCKET_BASE_INDEX) {
 					gc.blueprint(uID, UnitType.Rocket, randDir);
 				}
 			}
@@ -172,7 +172,7 @@ public class rc {
         }
 
         // build rangers:
-        if (gc.canProduceRobot(uID, UnitType.Ranger) && !(f.rangerCount > 4 * f.workerCount && f.rocketCount < 1)) {
+        if (gc.canProduceRobot(uID, UnitType.Ranger) && !(f.rangerCount > RANGER_WORKER_RATIO * f.workerCount && f.rocketCount < ROCKET_BASE_INDEX)) {
             gc.produceRobot(uID, UnitType.Ranger);
         }
 
@@ -216,6 +216,8 @@ public class rc {
 		            if (gc.canLaunchRocket(uID, landingLoc) && gc.startingMap(Planet.Mars).isPassableTerrainAt(landingLoc) == 1) {
 		                gc.launchRocket(uID, landingLoc);
 						f.assemblyLocInitialized = false;
+						// Every time it goes to Mars, expand population.
+						WORKER_BASE_INDEX++;
 		                break;
 		            }
 		        }

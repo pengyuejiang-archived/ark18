@@ -99,7 +99,7 @@ public class hf {
     }
 
 	private static void clrStatistics() {
-		f.workerCount = f.knightCount = f.rangerCount = f.mageCount = f.healerCount = f.factoryCount = f.rocketCount = 0;
+		f.workerCount = f.knightCount = f.rangerCount = f.mageCount = f.healerCount = f.factoryCount = f.rocketCount = f.unitCount = 0;
 	}
 
 	public static void reportELoc(MapLocation eLoc) {
