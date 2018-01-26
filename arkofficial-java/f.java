@@ -32,14 +32,16 @@ public class f {
 
 	// Earth
 	public static MapLocation eLocEarth = new MapLocation(Planet.Earth, 0, 0);
-	public static boolean eLocEarthInitialized = false;
+	public static boolean eLocEarthActivated = false;
 
 	// Mars
 	public static MapLocation eLocMars = new MapLocation(Planet.Mars, 0, 0);
-	public static boolean eLocMarsInitialized = false;
+	public static boolean eLocMarsActivated = false;
 
 	// Rocket
 	public static MapLocation assemblyLoc = new MapLocation(Planet.Earth, 0, 0);
-	public static boolean assemblyLocInitialized = false;
+	public static boolean assemblyLocActivated = false;
+
+	public static boolean enemyEliminated = false;
 
 }

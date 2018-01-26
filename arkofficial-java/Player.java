@@ -21,6 +21,7 @@ public class Player {
 	        while (true) {
 	            System.out.println("Current round: " + gc.round());
 				System.out.println("Time left: " + gc.getTimeLeftMs());
+				System.out.println(f.eLocEarthActivated);
 	            VecUnit units = gc.myUnits();
 				hf.runStatistics();
 				f.unitCount = (int)units.size();

@@ -12,6 +12,12 @@ public class rc {
         UnitType uType = unit.unitType();
         MapLocation uLoc = unit.location().mapLocation();
 
+		// See if there are still enemies
+		if (uLoc.equals(hf.getELoc(planet))) {
+			hf.deactivateELoc(planet);
+			if (gc.round() > 400) f.enemyEliminated = true;
+		}
+
         // Specific initialization
         Direction randDir = hf.randDir(8);
 		boolean movementGranted = true;
@@ -19,6 +25,12 @@ public class rc {
         // Footprinting
         VecUnit enemies = gc.senseNearbyUnitsByTeam(uLoc, unit.visionRange(), f.ENEMY);
         VecUnit friendlyAdjUnits = gc.senseNearbyUnitsByTeam(uLoc, 2L, f.MY_TEAM);
+
+		if (f.enemyEliminated) {
+			if (gc.canBlueprint(uID, UnitType.Rocket, randDir) && f.rocketCount < f.rocketBaseIndex) {
+				gc.blueprint(uID, UnitType.Rocket, randDir);
+			}
+		}
 
         // Response mechanism
         // Handling enemies is the priority, if there are some enemies…
@@ -67,11 +79,12 @@ public class rc {
 				if (gc.canHarvest(uID, f.dirs[i])) {
 					movementGranted = false;
 					gc.harvest(uID, f.dirs[i]);
+					break;
 				}
 			}
 			// Worker can only mv if they are not building something!
 			if (movementGranted && gc.isMoveReady(uID)) {
-				if (f.assemblyLocInitialized) {
+				if (f.assemblyLocActivated) {
 					hf.findPathTo(unit, f.assemblyLoc);
 				} else if (gc.canMove(uID, randDir)) {
 	                gc.moveRobot(uID, randDir);
@@ -96,6 +109,12 @@ public class rc {
         int uID = unit.id();
         UnitType uType = unit.unitType();
         MapLocation uLoc = unit.location().mapLocation();
+
+		// See if there are still enemies
+		if (uLoc.equals(hf.getELoc(planet))) {
+			hf.deactivateELoc(planet);
+			if (gc.round() > 400) f.enemyEliminated = true;
+		}
 
         // Specific initialization
         Direction randDir = hf.randDir(8);
@@ -127,10 +146,10 @@ public class rc {
                 }
             }
         } else {
-			if (hf.eLocInitialized(planet)) {
+			if (hf.eLocActivated(planet)) {
 				hf.findPathTo(unit, hf.getELoc(planet));
 			}
-			if (f.assemblyLocInitialized) {
+			if (f.assemblyLocActivated) {
 				hf.findPathTo(unit, f.assemblyLoc);
 			}
             if (gc.isMoveReady(uID) && gc.canMove(uID, randDir)) {
@@ -155,6 +174,12 @@ public class rc {
         UnitType uType = unit.unitType();
         MapLocation uLoc = unit.location().mapLocation();
 
+		// See if there are still enemies
+		if (uLoc.equals(hf.getELoc(planet))) {
+			hf.deactivateELoc(planet);
+			if (gc.round() > 400) f.enemyEliminated = true;
+		}
+
 		// Specific initialization
         Direction randDir = hf.randDir(8);
 
@@ -172,10 +197,10 @@ public class rc {
 			// Report eLoc
 			hf.reportELoc(eLoc);
 		} else {
-			if (hf.eLocInitialized(planet)) {
+			if (hf.eLocActivated(planet)) {
 				hf.findPathTo(unit, hf.getELoc(planet));
 			}
-			if (f.assemblyLocInitialized) {
+			if (f.assemblyLocActivated) {
 				hf.findPathTo(unit, f.assemblyLoc);
 			}
             if (gc.isMoveReady(uID) && gc.canMove(uID, randDir)) {
@@ -203,20 +228,22 @@ public class rc {
             }
         }
 
-        // build rangers:
-        if (gc.canProduceRobot(uID, UnitType.Ranger) && !(f.rangerCount > f.rangerWorkerRatio * f.workerCount && f.rocketCount < f.rocketBaseIndex)) {
-            gc.produceRobot(uID, UnitType.Ranger);
-        }
+    	if(!(gc.round() > 400 && !f.eLocEarthActivated)) {
+			// build rangers:
+	        if (gc.canProduceRobot(uID, UnitType.Ranger) && !(f.rangerCount > f.rangerWorkerRatio * f.workerCount && f.rocketCount < f.rocketBaseIndex)) {
+	            gc.produceRobot(uID, UnitType.Ranger);
+	        }
 
-		// build healers:
-		if (gc.canProduceRobot(uID, UnitType.Healer) && f.healerCount < f.rangerCount / f.rangerHealerRatio) {
-            gc.produceRobot(uID, UnitType.Healer);
-        }
+			// build healers:
+			if (gc.canProduceRobot(uID, UnitType.Healer) && f.healerCount < f.rangerCount / f.rangerHealerRatio) {
+	            gc.produceRobot(uID, UnitType.Healer);
+	        }
 
-		// Backup production of workers in case they all died.
-		if (gc.canProduceRobot(uID, UnitType.Worker) && f.workerCount == 0) {
-            gc.produceRobot(uID, UnitType.Worker);
-        }
+			// Backup production of workers in case they all died.
+			if (gc.canProduceRobot(uID, UnitType.Worker) && f.workerCount == 0) {
+	            gc.produceRobot(uID, UnitType.Worker);
+	        }
+		}
 
     }
 
@@ -231,9 +258,9 @@ public class rc {
 		if (planet == Planet.Earth) {
 			// Specialized initialization
 			// This must be contained within the "Earth" section, otherwise they will just stick to the rockets on Mars.
-			if (unit.structureIsBuilt() == 1) {
+			if (unit.structureIsBuilt() == 1 && !f.assemblyLocActivated) {
 				f.assemblyLoc = uLoc;
-				f.assemblyLocInitialized = true;
+				f.assemblyLocActivated = true;
 			}
 			VecUnit colonists = gc.senseNearbyUnitsByTeam(uLoc, 2, f.MY_TEAM);
 	        VecUnitID colonistLoadedIDs = unit.structureGarrison();
@@ -252,7 +279,7 @@ public class rc {
 		            MapLocation landingLoc = new MapLocation(Planet.Mars, targetX, targetY);
 		            if (gc.canLaunchRocket(uID, landingLoc) && gc.startingMap(Planet.Mars).isPassableTerrainAt(landingLoc) == 1) {
 		                gc.launchRocket(uID, landingLoc);
-						f.assemblyLocInitialized = false;
+						f.assemblyLocActivated = false;
 						// Every time it goes to Mars, expand population.
 						f.workerBaseIndex++;
 		                break;
