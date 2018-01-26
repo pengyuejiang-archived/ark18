@@ -51,9 +51,10 @@ public class Player {
 	                        break;
 	                }
 	            }
+				System.gc();
 	            gc.nextTurn();
 	        }
-			
+
 		} catch (Exception e) {
 			System.out.println("I've got an exception!");
 			e.printStackTrace();
