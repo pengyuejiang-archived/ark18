@@ -13,8 +13,8 @@ public class rc {
         MapLocation uLoc = unit.location().mapLocation();
 
 		// See if there are still enemies
-		if (uLoc.equals(hf.getELoc(planet))) {
-			hf.deactivateELoc(planet);
+		if (uLoc.equals(f.eLoc)) {
+			f.eLocActivated = false;
 			if (gc.round() > 400) f.enemyEliminated = true;
 		}
 
@@ -26,10 +26,13 @@ public class rc {
         VecUnit enemies = gc.senseNearbyUnitsByTeam(uLoc, unit.visionRange(), f.ENEMY);
         VecUnit friendlyAdjUnits = gc.senseNearbyUnitsByTeam(uLoc, 2L, f.MY_TEAM);
 
-		if (f.enemyEliminated) {
+		if (planet == Planet.Earth && (f.enemyEliminated || gc.round() > 650)) {
+			// If the great flood is near or there's no enemies on the planet, the only thing you do is produce rockets.
 			if (gc.canBlueprint(uID, UnitType.Rocket, randDir) && f.rocketCount < f.rocketBaseIndex) {
 				gc.blueprint(uID, UnitType.Rocket, randDir);
+				f.rocketBaseIndex++;
 			}
+			return;
 		}
 
         // Response mechanism
@@ -40,7 +43,8 @@ public class rc {
             MapLocation eLoc = hf.nearestUnit(unit, enemies).location().mapLocation();
             long distanceSquaredToEnemy = uLoc.distanceSquaredTo(eLoc);
             // Report eLoc
-            hf.reportELoc(eLoc);
+			f.eLocActivated = true;
+			f.eLoc = eLoc;
             // Escape from the evil hands of enemies!
             hf.runAwayFrom(unit, eLoc);
         } else {
@@ -70,7 +74,7 @@ public class rc {
 				if (gc.canBlueprint(uID, UnitType.Factory, randDir) && f.factoryCount < f.workerBaseIndex) {
 					gc.blueprint(uID, UnitType.Factory, randDir);
 				}
-				if (gc.canBlueprint(uID, UnitType.Rocket, randDir) && f.rocketCount < f.rocketBaseIndex) {
+				if (gc.canBlueprint(uID, UnitType.Rocket, randDir) && f.rocketCount < f.rocketBaseIndex && f.factoryCount >= f.workerBaseIndex) {
 					gc.blueprint(uID, UnitType.Rocket, randDir);
 				}
 			}
@@ -111,8 +115,8 @@ public class rc {
         MapLocation uLoc = unit.location().mapLocation();
 
 		// See if there are still enemies
-		if (uLoc.equals(hf.getELoc(planet))) {
-			hf.deactivateELoc(planet);
+		if (uLoc.equals(f.eLoc)) {
+			f.eLocActivated = false;
 			if (gc.round() > 400) f.enemyEliminated = true;
 		}
 
@@ -122,6 +126,14 @@ public class rc {
         // Footprinting
         VecUnit enemies = gc.senseNearbyUnitsByTeam(uLoc, unit.visionRange(), f.ENEMY);
 
+		// If no enemy, all mv to Mars.
+		// if (planet == Planet.Earth && (f.enemyEliminated || gc.round() > 650)) {
+		// 	if (f.assemblyLocActivated) {
+		// 		hf.findPathTo(unit, f.assemblyLoc);
+		// 	}
+		// 	return;
+		// }
+
         // Response mechanism
         // Handling enemies is the priority, if there are some enemies…
         if (enemies.size() > 0) {
@@ -130,7 +142,8 @@ public class rc {
             MapLocation eLoc = hf.nearestUnit(unit, enemies).location().mapLocation();
             long distanceSquaredToEnemy = uLoc.distanceSquaredTo(eLoc);
 			// Report eLoc
-			hf.reportELoc(eLoc);
+			f.eLocActivated = true;
+			f.eLoc = eLoc;
             // Rangers react differently depends on distance to enemy
             if (distanceSquaredToEnemy < unit.rangerCannotAttackRange()) {
                 if (gc.isMoveReady(uID)) {
@@ -146,8 +159,8 @@ public class rc {
                 }
             }
         } else {
-			if (hf.eLocActivated(planet)) {
-				hf.findPathTo(unit, hf.getELoc(planet));
+			if (f.eLocActivated && hf.alliesAround(unit, f.allyScope)) {
+				hf.findPathTo(unit, f.eLoc);
 			}
 			if (f.assemblyLocActivated) {
 				hf.findPathTo(unit, f.assemblyLoc);
@@ -175,8 +188,8 @@ public class rc {
         MapLocation uLoc = unit.location().mapLocation();
 
 		// See if there are still enemies
-		if (uLoc.equals(hf.getELoc(planet))) {
-			hf.deactivateELoc(planet);
+		if (uLoc.equals(f.eLoc)) {
+			f.eLocActivated = false;
 			if (gc.round() > 400) f.enemyEliminated = true;
 		}
 
@@ -187,6 +200,14 @@ public class rc {
         VecUnit enemies = gc.senseNearbyUnitsByTeam(uLoc, unit.visionRange(), f.ENEMY);
 		VecUnit allies = gc.senseNearbyUnitsByTeam(uLoc, unit.attackRange(), f.MY_TEAM);
 
+		// If no enemy, all mv to Mars.
+		// if (planet == Planet.Earth && (f.enemyEliminated || gc.round() > 650)) {
+		// 	if (f.assemblyLocActivated) {
+		// 		hf.findPathTo(unit, f.assemblyLoc);
+		// 	}
+		// 	return;
+		// }
+
         // Response mechanism
         // Handling enemies is the priority, if there are some enemies…
         if (enemies.size() > 0) {
@@ -195,10 +216,11 @@ public class rc {
             MapLocation eLoc = hf.nearestUnit(unit, enemies).location().mapLocation();
             long distanceSquaredToEnemy = uLoc.distanceSquaredTo(eLoc);
 			// Report eLoc
-			hf.reportELoc(eLoc);
+			f.eLocActivated = true;
+			f.eLoc = eLoc;
 		} else {
-			if (hf.eLocActivated(planet)) {
-				hf.findPathTo(unit, hf.getELoc(planet));
+			if (f.eLocActivated && hf.alliesAround(unit, f.allyScope)) {
+				hf.findPathTo(unit, f.eLoc);
 			}
 			if (f.assemblyLocActivated) {
 				hf.findPathTo(unit, f.assemblyLoc);
@@ -214,7 +236,7 @@ public class rc {
 		}
     }
 
-    public static void runFactory(Planet planet, Unit unit) {
+    public static void runFactory(Unit unit) {
 
         // Universal initialization
         int uID = unit.id();
@@ -228,21 +250,22 @@ public class rc {
             }
         }
 
-    	if(!(gc.round() > 400 && !f.eLocEarthActivated)) {
-			// build rangers:
-	        if (gc.canProduceRobot(uID, UnitType.Ranger) && !(f.rangerCount > f.rangerWorkerRatio * f.workerCount && f.rocketCount < f.rocketBaseIndex)) {
-	            gc.produceRobot(uID, UnitType.Ranger);
-	        }
+		// Backup production of workers in case they all died.
+		if (gc.canProduceRobot(uID, UnitType.Worker) && f.workerCount == 0) {
+			gc.produceRobot(uID, UnitType.Worker);
+		}
 
-			// build healers:
-			if (gc.canProduceRobot(uID, UnitType.Healer) && f.healerCount < f.rangerCount / f.rangerHealerRatio) {
-	            gc.produceRobot(uID, UnitType.Healer);
-	        }
+		// If no enemy, stop all production activities
+		if (gc.round() > 400 && !f.eLocActivated) return;
 
-			// Backup production of workers in case they all died.
-			if (gc.canProduceRobot(uID, UnitType.Worker) && f.workerCount == 0) {
-	            gc.produceRobot(uID, UnitType.Worker);
-	        }
+		// build rangers:
+		if (gc.canProduceRobot(uID, UnitType.Ranger) && !(f.rangerCount > f.rangerWorkerRatio * f.workerCount && f.rocketCount < f.rocketBaseIndex)) {
+			gc.produceRobot(uID, UnitType.Ranger);
+		}
+
+		// build healers:
+		if (gc.canProduceRobot(uID, UnitType.Healer) && f.healerCount < f.rangerCount / f.rangerHealerRatio) {
+			gc.produceRobot(uID, UnitType.Healer);
 		}
 
     }

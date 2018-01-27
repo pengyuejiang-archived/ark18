@@ -29,14 +29,11 @@ public class f {
 	// ratio: the ratio between one and another unit
 	public static int rangerWorkerRatio = 4;
 	public static int rangerHealerRatio = 4;
+	public static int allyIndex = 5;
+	public static int allyScope = 16;
 
-	// Earth
-	public static MapLocation eLocEarth = new MapLocation(Planet.Earth, 0, 0);
-	public static boolean eLocEarthActivated = false;
-
-	// Mars
-	public static MapLocation eLocMars = new MapLocation(Planet.Mars, 0, 0);
-	public static boolean eLocMarsActivated = false;
+	public static MapLocation eLoc = new MapLocation(Planet.Earth, 0, 0);
+	public static boolean eLocActivated = false;
 
 	// Rocket
 	public static MapLocation assemblyLoc = new MapLocation(Planet.Earth, 0, 0);

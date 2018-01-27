@@ -104,33 +104,6 @@ public class hf {
 		f.workerCount = f.knightCount = f.rangerCount = f.mageCount = f.healerCount = f.factoryCount = f.rocketCount = f.unitCount = 0;
 	}
 
-	// ELoc
-	public static void reportELoc(MapLocation eLoc) {
-		if (gc.planet() == Planet.Earth) {
-			f.eLocEarthActivated = true;
-			f.eLocEarth = eLoc;
-		} else {
-			f.eLocMarsActivated = true;
-			f.eLocMars = eLoc;
-		}
-	}
-
-	public static MapLocation getELoc(Planet planet) {
-		return planet == Planet.Earth ? f.eLocEarth : f.eLocMars;
-	}
-
-	public static boolean eLocActivated(Planet planet) {
-		return planet == Planet.Earth ? f.eLocEarthActivated : f.eLocMarsActivated;
-	}
-
-	public static void deactivateELoc(Planet planet) {
-		if (planet == Planet.Earth) {
-			f.eLocEarthActivated = false;
-		} else {
-			f.eLocMarsActivated = false;
-		}
-	}
-
 	//Get Optimal Launching time
     public static long getNextLaunchTime(){
         long period = gc.orbitPattern().getPeriod();
@@ -187,6 +160,12 @@ public class hf {
 			}
 		}
 		return weakestUnit;
+	}
+
+	// Check if the unit is working alone or there are other allies around.
+	public static boolean alliesAround(Unit unit, int distanceSquared) {
+		VecUnit alliesAround = gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), distanceSquared, f.MY_TEAM);
+		return alliesAround.size() > f.allyIndex;
 	}
 
 }

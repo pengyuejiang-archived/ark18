@@ -21,7 +21,6 @@ public class Player {
 	        while (true) {
 	            System.out.println("Current round: " + gc.round());
 				System.out.println("Time left: " + gc.getTimeLeftMs());
-				System.out.println(f.eLocEarthActivated);
 	            VecUnit units = gc.myUnits();
 				hf.runStatistics();
 				f.unitCount = (int)units.size();
@@ -45,7 +44,7 @@ public class Player {
 	                        rc.runHealer(planet, unit);
 	                        break;
 	                    case Factory:
-	                        rc.runFactory(planet, unit);
+	                        rc.runFactory(unit);
 	                        break;
 	                    case Rocket:
 	                        rc.runRocket(planet, unit);
